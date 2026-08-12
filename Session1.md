@@ -32,6 +32,7 @@ We are goin to stimulate a multibay EV charging station .Each bay measures its e
 6. IoT
 7. EdgeAI
 8. Optimizations
+9. Simulators like wokwi alternative for esp32
 
  # ThingsBord
 It is the service we will use for cloud services. we will be using MQTT for sending the data to the cloud .
@@ -39,3 +40,5 @@ It is the service we will use for cloud services. we will be using MQTT for send
   # Data we will be sharing for the Station is 
   Load,Charging or idle ,probability of vehicle qty
 
+# Edge AI
+When the data is transferred from the device from the devices to the cloud and this causes latency but we will have to be ready for the device at instances .So This EDGE AI is a code on the device that allow the charging , manage throttle and adjust chargings in the abscense of the network
