@@ -59,3 +59,5 @@ If the station has **5 kW** available but three vehicles request a combined **8 
 ## Project Goal
 
 To develop an intelligent EV charging system that efficiently manages limited electrical capacity using **IoT, cloud monitoring, Edge AI, and optimization techniques**.
+
+`` Made by Robins 
