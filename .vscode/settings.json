@@ -1,0 +1,8 @@
+{
+    "window.autoDetectColorScheme": false,
+    "workbench.colorTheme": "NoctaliaTheme",
+    "workbench.preferredDarkColorTheme": "NoctaliaTheme",
+    "workbench.preferredHighContrastColorTheme": "NoctaliaTheme",
+    "workbench.preferredHighContrastLightColorTheme": "NoctaliaTheme",
+    "workbench.preferredLightColorTheme": "NoctaliaTheme"
+}

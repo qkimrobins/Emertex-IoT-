@@ -71,3 +71,5 @@ Program1: WAP to blink LED
         delay(1000) //1 sec
         }
 
+
+> These are the codes but for this to work you will have to workaround your pc because if you dont have an ESP32 devkit you may have to stimulate the device on the computer virtually.
