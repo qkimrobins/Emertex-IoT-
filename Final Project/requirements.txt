@@ -1,0 +1,7 @@
+# Python dependencies for the AI training pipeline + demos
+# Install with:  python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+scikit-learn>=1.4
+numpy>=1.26
+pandas>=2.0
+paho-mqtt>=2.0
+requests>=2.31   # optional: ThingsBoard REST calls

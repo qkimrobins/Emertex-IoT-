@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "author": "Jayalaxmi Dhanyal",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 139.24, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot1", "top": 8.3, "left": -134.6, "attrs": {} },
+    { "type": "wokwi-potentiometer", "id": "pot2", "top": 8.3, "left": -9.8, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": 48.3, "left": 349.8, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "pot1:VCC", "esp:5V", "red", [ "v0" ] ],
+    [ "pot2:VCC", "esp:5V", "red", [ "v0" ] ],
+    [ "esp:GND.1", "pot2:GND", "black", [ "h0" ] ],
+    [ "pot1:GND", "esp:GND.1", "black", [ "v0" ] ],
+    [ "esp:34", "pot2:SIG", "green", [ "h-67.05", "v28.8", "h-48" ] ],
+    [ "esp:35", "pot1:SIG", "green", [ "h-57.45", "v38.4", "h-182.4" ] ],
+    [ "dht1:SDA", "esp:15", "green", [ "v0" ] ],
+    [ "esp:GND.3", "dht1:GND", "black", [ "h48", "v124.8", "h105.6" ] ],
+    [ "esp:5V", "dht1:VCC", "red", [ "h-47.85", "v67.2", "h268.8" ] ]
+  ],
+  "dependencies": {}
+}

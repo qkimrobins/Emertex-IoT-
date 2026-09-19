@@ -1,0 +1,36 @@
+# wokwi.toml — Wokwi simulator configuration
+# Open this folder in the Wokwi VS Code extension (F1 -> "Wokwi: Start Simulator")
+# or with wokwi-cli to run the ESP32 simulation with the OLED + status LEDs.
+#
+# IMPORTANT: Wokwi does NOT compile the sketch. `firmware` must point to a
+# PREBUILT binary. To rebuild after editing the firmware:
+#
+#   arduino-cli compile --fqbn esp32:esp32:esp32 \
+#     --output-dir build firmware/smart_ev_charger
+#
+# (libraries stay listed below for wokwi.com's web IDE which CAN compile .ino)
+#
+# Note: the firmware keeps TWO MQTT connections:
+#   1) ThingsBoard (needs a valid access token in config.h)
+#   2) a public mirror broker (broker.emqx.io) for the browser dashboard
+
+[wokwi]
+version = 1
+firmware = 'build/smart_ev_charger.ino.elf'
+
+# --- libraries (only used when compiling the .ino on wokwi.com) ---------
+[[libraries]]
+name = "PubSubClient"
+version = "2.8.0"
+
+[[libraries]]
+name = "ArduinoJson"
+version = "6.21.4"
+
+[[libraries]]
+name = "Adafruit SSD1306"
+version = "2.5.7"
+
+[[libraries]]
+name = "Adafruit GFX Library"
+version = "1.11.7"

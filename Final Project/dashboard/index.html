@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Edge-AI EV Charging Station Optimizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- animated ambient background -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow-1" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow-2" aria-hidden="true"></div>
+
+  <!-- ============================= HEADER ============================= -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">⚡</div>
+      <div class="brand-text">
+        <h1>Smart Edge-AI EV Charging Station Optimizer</h1>
+        <span class="brand-sub">ESP32 &nbsp;·&nbsp; MQTT &nbsp;·&nbsp; ThingsBoard &nbsp;·&nbsp; Edge-AI &nbsp;·&nbsp; 3-Bay Station</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div id="sourceBadge" class="chip chip-demo">DEMO&nbsp;FEED</div>
+      <div class="chip" id="tbChip" title="ThingsBoard MQTT uplink"><span class="dot dot-grey"></span>ThingsBoard</div>
+      <div class="chip" id="mqttChip" title="Dashboard MQTT broker"><span class="dot dot-grey"></span>MQTT</div>
+      <div class="chip mono" id="simClock">--:--</div>
+      <button class="icon-btn" id="btnSettings" title="Station settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- =========================== KPI ROW ============================= -->
+  <section class="kpi-row">
+    <div class="card kpi" id="kpiLoad">
+      <div class="kpi-title">Station Load</div>
+      <div class="gauge large" id="gaugeLoad"></div>
+      <div class="kpi-foot"><span id="loadCurrentTxt" class="mono">0.0 A</span><span class="dim">/ 64 A rated</span></div>
+    </div>
+
+    <div class="card kpi">
+      <div class="kpi-title">Total Power</div>
+      <div class="kpi-big mono" id="kpiPower">0.00<span class="unit">kW</span></div>
+      <div class="kpi-foot"><span class="dim">3-phase AC · PF 0.98</span></div>
+      <div class="mini-bar"><div class="mini-bar-fill" id="powerBar" style="width:0%"></div></div>
+    </div>
+
+    <div class="card kpi">
+      <div class="kpi-title">Active Sessions</div>
+      <div class="kpi-big mono" id="kpiSessions">0<span class="unit">/ 3</span></div>
+      <div class="kpi-foot"><span class="dim" id="sessionsDetail">all bays idle</span></div>
+      <div class="bay-dots" id="bayDots"><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="card kpi">
+      <div class="kpi-title">Energy Delivered</div>
+      <div class="kpi-big mono" id="kpiEnergy">0.00<span class="unit">kWh</span></div>
+      <div class="kpi-foot"><span class="dim">since station start</span></div>
+      <canvas class="kpi-spark" id="sparkEnergy" height="36"></canvas>
+    </div>
+
+    <div class="card kpi ai-kpi">
+      <div class="kpi-title">AI · Arrival in 15 min</div>
+      <div class="gauge large" id="gaugeArrival"></div>
+      <div class="kpi-foot">
+        <span class="dim">expected</span>
+        <span id="predArrival" class="mono">0.0</span>
+        <span class="dim">new session(s)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================== MAIN GRID =========================== -->
+  <main class="grid">
+    <!-- -------- Bay cards -------- -->
+    <section class="col-bays">
+      <div class="section-head">
+        <h2>Charging Bays</h2>
+        <span class="dim mono" id="baySumTxt"></span>
+      </div>
+      <div class="bay-grid" id="bayCards"></div>
+    </section>
+
+    <!-- -------- Right column: AI + optimization + alarms -------- -->
+    <aside class="col-side">
+      <div class="card">
+        <div class="card-head">
+          <h2>Edge-AI Predictions</h2>
+          <span class="tag tag-ai">on-device · scikit-learn</span>
+        </div>
+        <div class="ai-body">
+          <div class="ai-rows">
+            <div class="ai-row"><span>Arrival probability (15 min)</span><b class="mono" id="aiProbTxt">--</b></div>
+            <div class="ai-row"><span>Predicted new sessions</span><b class="mono" id="aiSessionsTxt">--</b></div>
+            <div class="ai-row"><span>Forecast reserve</span><b class="mono" id="aiReserveTxt">--</b></div>
+            <div class="ai-row"><span>Model</span><b class="mono" id="aiModelTxt">LogisticRegression</b></div>
+          </div>
+          <canvas id="chartArrival" height="110"></canvas>
+          <div class="ai-foot dim">
+            p = σ(w·x + b) · features: hour, weekday, weekend, peak, busy-rate
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Optimizer Decisions</h2>
+          <div class="mode-switch" id="modeSwitch" title="Toggle AUTO / MANUAL load management">
+            <span class="mode-opt active" data-mode="AUTO">AUTO</span>
+            <span class="mode-opt" data-mode="MANUAL">MANUAL</span>
+          </div>
+        </div>
+        <div id="decisionList" class="decision-list"></div>
+        <div class="load-meter">
+          <div class="load-meter-head">
+            <span>Station load</span>
+            <b class="mono" id="loadMeterTxt">0.0 A</b>
+          </div>
+          <div class="load-track"><div class="load-fill" id="loadFill" style="width:0%"></div></div>
+        </div>
+        <div class="ai-foot dim" id="optRuleTxt">
+          Safety → temp &lt; 55°C · predictive reserve for arrivals · priority-based ratioing
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Alarms</h2>
+          <span class="tag tag-alarm" id="alarmCountTag">0 active</span>
+        </div>
+        <div id="alarmList" class="alarm-list">
+          <div class="alarm-empty">No active alarms — station nominal</div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ========================= CHARTS =============================== -->
+  <section class="charts-row">
+    <div class="card chart-card wide">
+      <div class="card-head">
+        <h2>Station Load History</h2>
+        <span class="dim mono" id="loadHudTxt"></span>
+      </div>
+      <canvas id="chartLoad" height="190"></canvas>
+      <div class="chart-legend">
+        <span><i style="background:#22d3ee"></i>load %</span>
+        <span><i style="background:#34d399"></i>active sessions</span>
+      </div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-head">
+        <h2>Power per Bay</h2>
+        <span class="dim mono" id="powerHudTxt"></span>
+      </div>
+      <canvas id="chartPower" height="190"></canvas>
+      <div class="chart-legend">
+        <span><i style="background:#22d3ee"></i>Bay 1</span>
+        <span><i style="background:#a78bfa"></i>Bay 2</span>
+        <span><i style="background:#fbbf24"></i>Bay 3</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== SETTINGS DRAWER ========================= -->
+  <div class="drawer-scrim" id="drawerScrim"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h2>Station Configuration</h2>
+      <button class="icon-btn" id="btnCloseDrawer">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <h3>Optimizer</h3>
+      <label class="ctl">
+        <span>Station rated current</span>
+        <input type="range" id="ctlMaxCurrent" min="16" max="200" step="1" value="64" />
+        <b class="mono" id="ctlMaxCurrentTxt">64 A</b>
+      </label>
+      <label class="ctl">
+        <span>Arrival busy-rate (AI input)</span>
+        <input type="range" id="ctlBusyRate" min="0.2" max="3" step="0.1" value="1.0" />
+        <b class="mono" id="ctlBusyRateTxt">1.0×</b>
+      </label>
+      <label class="ctl toggle">
+        <span>Automatic EV plug-in / out</span>
+        <input type="checkbox" id="ctlAutoEvents" checked /><i></i>
+      </label>
+      <button class="btn ghost" id="btnResetEnergy">Reset station energy</button>
+
+      <h3>Simulation</h3>
+      <label class="ctl toggle">
+        <span>Demo feed when no MQTT data</span>
+        <input type="checkbox" id="ctlDemoMode" checked /><i></i>
+      </label>
+      <label class="ctl">
+        <span>Demo day / clock</span>
+        <b class="mono dim" id="ctlSimClock">-</b>
+      </label>
+
+      <h3>Connectivity</h3>
+      <label class="ctl">
+        <span>MQTT broker (WebSocket)</span>
+        <input type="text" id="ctlBroker" value="wss://broker.emqx.io:8084/mqtt" />
+      </label>
+      <label class="ctl">
+        <span>Telemetry topic</span>
+        <input type="text" id="ctlTeleTopic" value="emx/ev/telemetry" />
+      </label>
+      <label class="ctl">
+        <span>Command topic</span>
+        <input type="text" id="ctlCmdTopic" value="emx/ev/cmd" />
+      </label>
+      <button class="btn" id="btnReconnect">Reconnect MQTT</button>
+
+      <h3>About</h3>
+      <p class="dim small">
+        Firmware: ESP32 + Arduino · Models: scikit-learn (LogisticRegression &amp; DecisionTree)
+        exported to C · Optimization: ALLOW / THROTTLE / DEFER.
+      </p>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast"></div>
+
+  <!-- MQTT.js (browser client) -->
+  <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+  <script src="js/gauges.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/demo.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
